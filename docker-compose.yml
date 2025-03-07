@@ -1,24 +1,31 @@
-# yaml
+
 version: '3.8'
 
 services:
+  api:
+    build: .
+    ports:
+      - "5000:5000"
+    environment:
+      - PORT=5000
+      - MONGO_URI=mongodb://mongodb:27017/referralDB
+    depends_on:
+      mongo:
+        condition: service_healthy
+    restart: always
+
   mongo:
     image: mongo:latest
-    container_name: mongo
+    container_name: mongodb
     ports:
       - "27017:27017"
     volumes:
       - mongo-data:/data/db
-
-  app:
-    build: .
-    container_name: referral-api
-    ports:
-      - "5000:5000"
-    environment:
-      - MONGO_URI=mongodb://mongo:27017/referraldb
-    depends_on:
-      - mongo
+    healthcheck:
+      test: ["CMD", "mongo", "--eval", "db.runCommand({ ping: 1 })"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
 
 volumes:
   mongo-data:
